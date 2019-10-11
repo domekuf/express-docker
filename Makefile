@@ -9,6 +9,7 @@ run:
 	echo "$$port" > .port
 	sudo mkdir -p /var/express/$$(cat .name);
 	docker run \
+		--restart always \
 		--mount type=volume,dst=/usr/src/app,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=/var/express/$$(cat .name) \
 		-p $$(cat .port):80 --name=$$(cat .name) --hostname=$$(cat .name) -e "hostname=$$(cat .name)" \
 		-d express
