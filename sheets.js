@@ -11,18 +11,27 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
 // created automatically when the authorization flow completes for the first
 // time.
 const TOKEN_PATH = 'token.json';
+const JWT_PATH = 'jwt.keys.json';
 
 const SHEET_ID = '1FWHm8879jYwAspAvDS0eawJZK5dYt0kdxPLSdjY94yQ';
 
+const credentials = JSON.parse(fs.readFileSync('credentials.json'));
+const {client_secret, client_id, redirect_uris} = credentials.web;
+const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+
 function authorize(credentials, callback) {
-  const {client_secret, client_id, redirect_uris} = credentials.installed;
-  const oAuth2Client = new google.auth.OAuth2(
-      client_id, client_secret, redirect_uris[0]);
 
   // Check if we have previously stored a token.
   fs.readFile(TOKEN_PATH, (err, token) => {
     if (err) {
-      callback.onerror(err);
+      const authUrl = oAuth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: SCOPES,
+      });
+      callback.onerror({
+        error: err,
+        message: `Please try to refresh token ${authUrl}`
+      });
     }
     oAuth2Client.setCredentials(JSON.parse(token));
     callback.onsuccess(oAuth2Client);
@@ -105,6 +114,17 @@ router.put('/:id', function(req, res, next) {
         res.json({error: err})
       }
     });
+  });
+});
+
+router.get('/auth', function(req, res, next) {
+  const code = req.query.code;
+  oAuth2Client.getToken(code, (err, tokens) => {
+    if (err) {
+      console.error('Error getting oAuth tokens:');
+      throw err;
+    }
+    res.json(tokens);
   });
 });
 
