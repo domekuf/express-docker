@@ -6,7 +6,7 @@ const {google} = require('googleapis');
 
 
 // If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
@@ -73,7 +73,7 @@ function putByRange(auth, range, value, callback) {
         callback.onerror(err);
         return;
     }
-    callback.onsuccess(rsp);
+    callback.onsuccess({values: [[ value ? 1 : 0 ]]});
   });
 }
 
@@ -92,8 +92,7 @@ router.put('/:id', function(req, res, next) {
             for (const entry of data) {
               if (entry.name === req.body.name) {
                 // update entry.range using req.body.checked
-                res.json({message: `Updated ${entry.range} as ${req.body.checked}`});
-                putByRange(auth, entry.range, req.body.checked, {
+                return putByRange(auth, entry.range, req.body.checked, {
                   onsuccess: (data) => {
                     res.json({message: `Updated ${entry.range} as ${req.body.checked}`, data});
                   },
