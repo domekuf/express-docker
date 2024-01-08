@@ -135,9 +135,10 @@ function putByLine(auth, line, data, callback) {
       data.checked ? 1 : 0,
       '',
       data.under5 ? 1:0,
-      data.bet5adn10 ? 1:0,
+      data.bet5and10 ? 1:0,
       data.gluten ? 1:0,
       data.lactose ? 1:0,
+      data.notes,
     ]] },
     valueInputOption: 'USER_ENTERED'
   }, (err, rsp) => {
@@ -153,14 +154,7 @@ router.put('/line/:line', function(req, res, next) {
   fs.readFile('credentials.json', (err, content) => {
     authorize(JSON.parse(content), {
       onsuccess: (auth) => {
-        putByLine(auth, `${req.params.line}`, {
-          checked: req.body.checked,
-          under5: false,
-          bet5and10: true,
-          gluten: false,
-          lactose: false,
-          notes: 'Prova',
-        }, {
+        putByLine(auth, `${req.params.line}`, req.body, {
           onsuccess: (data) => {
             res.json({message: `Updated D${req.params.line} as ${req.body.checked}`, data});
           },
