@@ -11,7 +11,6 @@ const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 // created automatically when the authorization flow completes for the first
 // time.
 const TOKEN_PATH = 'token.json';
-const JWT_PATH = 'jwt.keys.json';
 
 //const SHEET_ID = '1FWHm8879jYwAspAvDS0eawJZK5dYt0kdxPLSdjY94yQ'; // Anna Domenico 5 settembre
 //const SHEET_ID = '14j53zk63XntBbG0LQ5LR9gq2K5DdZeJa4x0zhHDJ8V8';
@@ -20,6 +19,42 @@ const SHEET_ID = '1-AzabjENPnJwW8wYL2vmxuyqrepv9rdmsU6Wg9N0HuE'; // Anna Domenic
 const credentials = JSON.parse(fs.readFileSync('credentials.json'));
 const {client_secret, client_id, redirect_uris} = credentials.web;
 const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+
+oAuth2Client.on('tokens', (tokens) => {
+  console.log(tokens);
+  fs.readFile(TOKEN_PATH, (err, bufferToken) => {
+    if (err) {
+      const authUrl = oAuth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: SCOPES,
+      });
+      callback.onerror({
+        error: err,
+        message: `Please try to refresh token ${authUrl}`
+      });
+    }
+    const token = JSON.parse(bufferToken);
+    console.log(token);
+    updated = false;
+    if (tokens.expiry_date) {
+      token.expiry_date = tokens.expiry_date;
+      updated = true;
+    }
+    if (tokens.refresh_token) {
+      token.refresh_token = tokens.refresh_token;
+      updated = true;
+    }
+    if (tokens.access_token) {
+      token.access_token = tokens.access_token;
+      updated = true;
+    }
+    if (updated) {
+      fs.writeFile(TOKEN_PATH, JSON.stringify(token, null, 2), () => {
+        console.log('token updated', token);
+      });
+    }
+  });
+});
 
 function authorize(credentials, callback) {
 
